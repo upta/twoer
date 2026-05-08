@@ -1,0 +1,103 @@
+{
+	"scenario_id": "phase_transition_checkpoint",
+	"version": 3,
+	"description": "Verifies checkpoint-to-BATTLE_PLANNING transition: after a unit reaches checkpoint, phase becomes BATTLE_PLANNING, +15 mana awarded, planning UI shows, queue contains only undeployed + revived units.",
+	"harness_scene": "res://validation/harnesses/level_battle_harness.tscn",
+	"done_contract": {
+		"mana_per_checkpoint": 15,
+		"expected_initial_mana": 50,
+		"expected_post_checkpoint_mana": 65,
+		"expected_post_checkpoint_phase": "BATTLE_PLANNING",
+		"notes": "Uses 'battle' setup_mode which starts deploying a Swarm into lane 2 (no defenses). After ~450 frames the unit reaches checkpoint at x=400. Harness controller must expose: nodes.planning_panel.visible, metrics.phase, metrics.mana, metrics.unit_queue_size, metrics.checkpoint_index."
+	},
+	"artifact_contract": {
+		"required_files": ["summary.json", "events.log"],
+		"missing_file_is_failure": true
+	},
+	"exit_codes": {
+		"pass": 0,
+		"assertion_failure": 1,
+		"runtime_error": 2,
+		"timeout": 3,
+		"artifact_generation_error": 4
+	},
+	"cli_contract": {
+		"command_template": "./tools/run_scenario.ps1 -Scenario src/validation/scenarios/phase_transition_checkpoint.json -GodotExe <path>"
+	},
+	"steps": [
+		{ "op": "load_harness", "scene": "res://validation/harnesses/level_battle_harness.tscn" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "battle_start" },
+		{
+			"op": "assert_value",
+			"checkpoint": "battle_start",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "BATTLE"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "battle_start",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 50
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "battle_start",
+			"path": "harness_state.metrics.checkpoint_index",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{ "op": "wait_frames", "frames": 450 },
+		{ "op": "checkpoint", "name": "after_checkpoint" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_checkpoint",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "BATTLE_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_checkpoint",
+			"path": "harness_state.metrics.checkpoint_index",
+			"comparator": "gte",
+			"expected": 1
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_checkpoint",
+			"path": "harness_state.nodes.planning_panel.visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_pipeline",
+			"sources": {
+				"before_mana": { "kind": "checkpoint", "checkpoint": "battle_start", "path": "harness_state.metrics.mana" },
+				"after_mana": { "kind": "checkpoint", "checkpoint": "after_checkpoint", "path": "harness_state.metrics.mana" },
+				"reward": { "kind": "contract", "path": "done_contract.mana_per_checkpoint" }
+			},
+			"pipeline": [
+				{ "op": "subtract", "inputs": ["after_mana", "before_mana"], "as": "mana_gained" }
+			],
+			"assert": { "actual": "mana_gained", "comparator": "eq", "expected_source": "reward" }
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_checkpoint",
+			"path": "harness_state.metrics.deploy_button_visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_checkpoint",
+			"path": "harness_state.metrics.lane_section_visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{ "op": "quit" }
+	]
+}

@@ -1,0 +1,148 @@
+{
+	"scenario_id": "mana_resurrection",
+	"version": 3,
+	"description": "Verifies mana resurrection mechanics: dead units can be revived for 30 mana, revived unit appears in queue, mana decreases by cost, cannot revive with insufficient mana.",
+	"harness_scene": "res://validation/harnesses/level_battle_planning_with_dead_harness.tscn",
+	"done_contract": {
+		"revive_cost": 30,
+		"initial_mana": 80,
+		"initial_dead_units_count": 2,
+		"initial_queue_size": 1,
+		"post_revive_queue_size": 2,
+		"post_revive_dead_units_count": 1,
+		"post_revive_mana": 50,
+		"notes": "Harness setup_mode 'battle_planning_with_dead' must: set mana to 80, add 2 dead units (e.g. Swarm, Tank), leave 1 unit in queue. Harness controller must expose metrics.dead_units_count, metrics.mana, metrics.unit_queue_size. The 'revive_first_dead' input action must be mapped or a press_action sequence must trigger revive."
+	},
+	"artifact_contract": {
+		"required_files": ["summary.json", "events.log"],
+		"missing_file_is_failure": true
+	},
+	"exit_codes": {
+		"pass": 0,
+		"assertion_failure": 1,
+		"runtime_error": 2,
+		"timeout": 3,
+		"artifact_generation_error": 4
+	},
+	"cli_contract": {
+		"command_template": "./tools/run_scenario.ps1 -Scenario src/validation/scenarios/mana_resurrection.json -GodotExe <path>"
+	},
+	"steps": [
+		{ "op": "load_harness", "scene": "res://validation/harnesses/level_battle_planning_with_dead_harness.tscn" },
+		{ "op": "wait_frames", "frames": 10 },
+		{ "op": "checkpoint", "name": "before_revive" },
+		{
+			"op": "assert_value",
+			"checkpoint": "before_revive",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "BATTLE_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "before_revive",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 80
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "before_revive",
+			"path": "harness_state.metrics.dead_units_count",
+			"comparator": "eq",
+			"expected": 2
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "before_revive",
+			"path": "harness_state.metrics.unit_queue_size",
+			"comparator": "eq",
+			"expected": 1
+		},
+		{ "op": "press_action", "action": "revive_first_dead" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "after_first_revive" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_first_revive",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 50
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_first_revive",
+			"path": "harness_state.metrics.dead_units_count",
+			"comparator": "eq",
+			"expected": 1
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_first_revive",
+			"path": "harness_state.metrics.unit_queue_size",
+			"comparator": "eq",
+			"expected": 2
+		},
+		{
+			"op": "assert_pipeline",
+			"sources": {
+				"before_mana": { "kind": "checkpoint", "checkpoint": "before_revive", "path": "harness_state.metrics.mana" },
+				"after_mana": { "kind": "checkpoint", "checkpoint": "after_first_revive", "path": "harness_state.metrics.mana" },
+				"cost": { "kind": "contract", "path": "done_contract.revive_cost" }
+			},
+			"pipeline": [
+				{ "op": "subtract", "inputs": ["before_mana", "after_mana"], "as": "mana_spent" }
+			],
+			"assert": { "actual": "mana_spent", "comparator": "eq", "expected_source": "cost" }
+		},
+		{ "op": "press_action", "action": "revive_first_dead" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "after_second_revive" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_second_revive",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 20
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_second_revive",
+			"path": "harness_state.metrics.dead_units_count",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_second_revive",
+			"path": "harness_state.metrics.unit_queue_size",
+			"comparator": "eq",
+			"expected": 3
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_second_revive",
+			"path": "harness_state.metrics.revive_section_visible",
+			"comparator": "eq",
+			"expected": false
+		},
+		{ "op": "press_action", "action": "revive_first_dead" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "no_revive_possible" },
+		{
+			"op": "assert_value",
+			"checkpoint": "no_revive_possible",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 20
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "no_revive_possible",
+			"path": "harness_state.metrics.dead_units_count",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{ "op": "quit" }
+	]
+}

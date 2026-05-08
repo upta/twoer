@@ -1,0 +1,107 @@
+{
+	"scenario_id": "battle_planning_ui",
+	"version": 3,
+	"description": "Verifies BATTLE_PLANNING phase UI: planning panel visible, shop hidden, mana spending options (revive section) visible when dead units exist, deploy lane buttons visible, deploy button visible and enabled.",
+	"harness_scene": "res://validation/harnesses/level_battle_planning_harness.tscn",
+	"done_contract": {
+		"expected_phase": "BATTLE_PLANNING",
+		"expected_planning_panel_visible": true,
+		"expected_shop_section_visible": false,
+		"expected_lane_section_visible": true,
+		"expected_deploy_button_visible": true,
+		"expected_deploy_button_disabled": false,
+		"expected_revive_section_visible": true,
+		"expected_revive_button_count_gte": 1,
+		"notes": "Harness controller must expose: nodes.planning_panel.visible, metrics.shop_section_visible, metrics.lane_section_visible, metrics.deploy_button_visible, metrics.deploy_button_disabled, metrics.revive_section_visible, metrics.revive_button_count. Harness setup_mode 'battle_planning_with_dead' must set up BATTLE_PLANNING with dead units and sufficient mana (>=30)."
+	},
+	"artifact_contract": {
+		"required_files": ["summary.json", "events.log"],
+		"missing_file_is_failure": true
+	},
+	"exit_codes": {
+		"pass": 0,
+		"assertion_failure": 1,
+		"runtime_error": 2,
+		"timeout": 3,
+		"artifact_generation_error": 4
+	},
+	"cli_contract": {
+		"command_template": "./tools/run_scenario.ps1 -Scenario src/validation/scenarios/battle_planning_ui.json -GodotExe <path>"
+	},
+	"steps": [
+		{ "op": "load_harness", "scene": "res://validation/harnesses/level_battle_planning_with_dead_harness.tscn" },
+		{ "op": "wait_frames", "frames": 10 },
+		{ "op": "checkpoint", "name": "planning_visible" },
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "BATTLE_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.nodes.planning_panel.visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.shop_section_visible",
+			"comparator": "eq",
+			"expected": false
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.lane_section_visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.deploy_button_visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.deploy_button_disabled",
+			"comparator": "eq",
+			"expected": false
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.revive_section_visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.revive_button_count",
+			"comparator": "gte",
+			"expected": 1
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.dead_units_count",
+			"comparator": "gte",
+			"expected": 1
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "planning_visible",
+			"path": "harness_state.metrics.mana",
+			"comparator": "gte",
+			"expected": 30
+		},
+		{ "op": "quit" }
+	]
+}
