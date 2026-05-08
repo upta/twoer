@@ -21,6 +21,10 @@ func setup(unit_registry: UnitRegistry, battlefield: Battlefield) -> void:
 	_battlefield = battlefield
 
 func start_deployment() -> void:
+	if _unit_registry.unit_queue.is_empty():
+		# No units to deploy, but battle can resume (alive units keep fighting)
+		is_deploying = false
+		return
 	is_deploying = true
 	deploy_timer = 0.0
 

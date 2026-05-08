@@ -82,7 +82,8 @@ func _on_phase_changed(phase: PhaseManager.Phase) -> void:
 		# CHECKPOINT is transient: AI acts, +15 mana, then immediately to BATTLE_PLANNING
 		ai_defender.execute_between_waves()
 		game_manager.economy.add_mana(15)
-		game_manager.phases.begin_battle_planning()
+		# Defer so all CHECKPOINT signal handlers complete before BATTLE_PLANNING emits
+		game_manager.phases.call_deferred("begin_battle_planning")
 	else:
 		battlefield.process_mode = Node.PROCESS_MODE_DISABLED
 

@@ -103,6 +103,8 @@ func _update_queue_display() -> void:
 		child.queue_free()
 	
 	var queue_size: int = units.unit_queue.size()
+	# Queue reordering only available during BATTLE_PLANNING (per design)
+	var show_reorder: bool = _is_mana_mode
 	for i in queue_size:
 		var row := HBoxContainer.new()
 		
@@ -111,19 +113,20 @@ func _update_queue_display() -> void:
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
 		
-		var up_button := Button.new()
-		up_button.text = "▲"
-		up_button.disabled = (i == 0)
-		up_button.custom_minimum_size = Vector2(30, 0)
-		up_button.pressed.connect(_on_queue_move.bind(i, i - 1))
-		row.add_child(up_button)
-		
-		var down_button := Button.new()
-		down_button.text = "▼"
-		down_button.disabled = (i == queue_size - 1)
-		down_button.custom_minimum_size = Vector2(30, 0)
-		down_button.pressed.connect(_on_queue_move.bind(i, i + 1))
-		row.add_child(down_button)
+		if show_reorder:
+			var up_button := Button.new()
+			up_button.text = "▲"
+			up_button.disabled = (i == 0)
+			up_button.custom_minimum_size = Vector2(30, 0)
+			up_button.pressed.connect(_on_queue_move.bind(i, i - 1))
+			row.add_child(up_button)
+			
+			var down_button := Button.new()
+			down_button.text = "▼"
+			down_button.disabled = (i == queue_size - 1)
+			down_button.custom_minimum_size = Vector2(30, 0)
+			down_button.pressed.connect(_on_queue_move.bind(i, i + 1))
+			row.add_child(down_button)
 		
 		queue_container.add_child(row)
 
@@ -162,17 +165,23 @@ func _update_revive_section() -> void:
 
 
 func _update_lane_selection() -> void:
+	# Lane selection only available during BATTLE_PLANNING (per design)
+	var lane_section := lane_1_button.get_parent().get_parent()
+	if lane_section:
+		lane_section.visible = _is_mana_mode
+	
 	if deployer.current_lane >= 0 and deployer.current_lane < lane_buttons.size():
 		for i in lane_buttons.size():
 			lane_buttons[i].button_pressed = (i == deployer.current_lane)
 
 
 func _update_start_button() -> void:
-	start_battle_button.disabled = units.unit_queue.is_empty()
-	
 	if _is_mana_mode:
+		# In BATTLE_PLANNING, always allow resuming battle (alive units keep fighting)
+		start_battle_button.disabled = false
 		start_battle_button.text = "Deploy!"
 	else:
+		start_battle_button.disabled = units.unit_queue.is_empty()
 		start_battle_button.text = "Ready for Battle"
 
 
@@ -185,7 +194,7 @@ func _on_upgrade_unit(unit_type: String) -> void:
 
 
 func _on_lane_selected(lane_index: int) -> void:
-	if phases.current_phase == PhaseManager.Phase.INITIAL_PLANNING or phases.current_phase == PhaseManager.Phase.BATTLE_PLANNING:
+	if phases.current_phase == PhaseManager.Phase.BATTLE_PLANNING:
 		deployer.current_lane = lane_index
 		_update_lane_selection()
 
