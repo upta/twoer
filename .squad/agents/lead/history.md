@@ -85,4 +85,20 @@
 
 ---
 
+### 2025-07-15: Enriched Validation Skill Files for Sub-Agent Consumption
+
+**Context:** Sub-agents spawned via `task` tool can't use the `skill` tool — they read SKILL.md files directly from `.squad/skills/` symlinks. The original files were ~29 lines and lacked schema details, step op signatures, comparator lists, and examples.
+
+**What was enriched:**
+
+1. **author-validation-scenario/SKILL.md** (29→81 lines): Added scenario JSON schema table, step operations reference with shapes, comparator list, pipeline details (sources/ops/assert), harness controller pattern with `get_observed_state()` return shape, and compact assert_value + assert_pipeline examples from the move_up_smoke reference scenario.
+
+2. **debug-validation-failure/SKILL.md** (30→67 lines): Added artifact file locations and shortcut paths, summary.json reading guide (failed_assertion fields, verification shapes), event_log.json structure, scene_tree.json structure, signal facts shape (count/connected/signal_name/source_path/last_emitted_msec), and common failure pattern diagnostic table.
+
+3. **install-agentic-godot-validation/SKILL.md** (27→38 lines): Added Step 8 for Squad skill symlinks with PowerShell commands to create junctions from `.squad/skills/` → submodule skill directories, plus a check that symlinks resolve.
+
+**Source docs used:** `plans/specs/scenario_format.md`, `plans/specs/artifact_schema.md`, `docs/write-a-harness.md`, `docs/write-a-scenario.md`, `examples/minimal_poc/validation/scenarios/move_up_smoke.json`.
+
+---
+
 *End of History*
