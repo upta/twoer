@@ -2,6 +2,52 @@
 
 ## Learnings
 
+### Phase 8: Critical Bugfixes from Playtesting (2026-05-08)
+
+**Files Modified:**
+- `src/game/level/level.gd` — Fixed signal argument mismatch, added checkpoint detection, fixed win/lose signal emission order
+- `src/game/entities/unit.gd` — Fixed reached_end to stop unit processing after emission
+- `src/game/main.gd` — Added CanvasLayer for UI to fix Control node layout issues
+
+**Critical Bugs Fixed:**
+
+1. **Signal argument mismatch (ERROR: Method expected 1 argument but called with 2)**
+   - Root cause: Signals `reached_end` and `unit_died` already pass `self`, but `.bind(unit)` added duplicate argument
+   - Fix: Removed `.bind(unit)` from signal connections in `_on_unit_deployed()`
+   - Pattern: When signals explicitly pass the sender as first argument, don't bind it again
+
+2. **Win/lose conditions never triggered**
+   - Root cause: `game_manager.level_won.emit()` and `.level_lost.emit()` called AFTER `get_tree().paused = true`
+   - Fix: Moved signal emissions BEFORE pausing the tree so they propagate to connected handlers (main.gd)
+   - Pattern: **Always emit signals before pausing the scene tree** — paused state blocks signal propagation in some cases
+
+3. **Checkpoint detection missing**
+   - Root cause: No code checked unit positions against `checkpoint_positions` array
+   - Fix: Added `_physics_process()` that checks if all alive deployed units have passed current checkpoint x-position
+   - Trigger: `game_manager.phases.reach_checkpoint()` when all alive units past checkpoint
+   - Pattern: Use `_current_checkpoint_index` to track progression through checkpoint array (reset to 0 in setup)
+
+4. **Lose condition incorrectly checked deploying state**
+   - Root cause: `not deployer.is_deploying` doesn't account for units still in queue
+   - Fix: Check `game_manager.units.unit_queue.is_empty()` AND deployed_units count
+   - Pattern: Lose only when both queue empty AND no alive deployed units
+
+5. **Units continued moving after reaching end**
+   - Root cause: `reached_end.emit()` fired but unit state remained MOVING, causing repeated signal emissions
+   - Fix: Set `state = State.DEAD` and `is_alive = false` immediately after `reached_end.emit()`
+   - Pattern: Terminal state transitions (win/lose) should set entity state to prevent further processing
+
+6. **Level select UI layout broken**
+   - Root cause: Control nodes (level_select.tscn) added as children of Node2D (main) don't respect anchors/layout_mode
+   - Fix: Added CanvasLayer as `ui_layer` in main.gd, added level_select to ui_layer instead of directly to Node2D
+   - Pattern: **UI Control nodes must be children of CanvasLayer when parent scene is Node2D** — only CanvasLayer/Control parents support layout properties
+
+**Decisions:**
+- Used `PhaseManager.Phase` enum properly throughout (removed direct phase assignment in favor of `complete_level()`)
+- Checkpoint detection runs only during BATTLE phase to avoid false triggers
+- Deployer already removes dead units from its array via `_on_unit_died`, so level.gd doesn't duplicate removal
+- `_on_unit_died` parameter renamed to `_unit` since it's now unused (deployer handles tracking)
+
 ### Phase 7: Level Select + Main Integration (2026-05-08)
 
 **Files Created:**

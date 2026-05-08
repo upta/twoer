@@ -11,6 +11,7 @@ class_name Level
 
 var level_data: Dictionary
 var checkpoint_x_positions: Array[int] = [400, 800]
+var _current_checkpoint_index: int = 0
 
 
 func _ready() -> void:
@@ -18,8 +19,38 @@ func _ready() -> void:
 	lose_label.visible = false
 
 
+func _physics_process(_delta: float) -> void:
+	if game_manager.phases.current_phase != PhaseManager.Phase.BATTLE:
+		return
+	
+	if _current_checkpoint_index >= game_manager.phases.MAX_CHECKPOINTS:
+		return
+	
+	# Need at least one deployed unit alive to trigger checkpoint
+	var alive_units: Array[Node2D] = []
+	for unit in deployer.deployed_units:
+		if is_instance_valid(unit):
+			alive_units.append(unit)
+	
+	if alive_units.is_empty():
+		return
+	
+	# Check if ALL alive units have passed the current checkpoint x-position
+	var checkpoint_x: float = battlefield.get_lane(0).checkpoint_positions[_current_checkpoint_index]
+	var all_past: bool = true
+	for unit in alive_units:
+		if unit.global_position.x < checkpoint_x:
+			all_past = false
+			break
+	
+	if all_past:
+		_current_checkpoint_index += 1
+		game_manager.phases.reach_checkpoint()
+
+
 func setup(p_level_data: Dictionary) -> void:
 	level_data = p_level_data
+	_current_checkpoint_index = 0
 	
 	game_manager.setup_level(level_data)
 	battlefield.setup(level_data)
@@ -46,17 +77,16 @@ func _on_phase_changed(phase: PhaseManager.Phase) -> void:
 
 
 func _on_unit_deployed(unit: Node2D, _lane_index: int) -> void:
-	unit.reached_end.connect(_on_unit_reached_end.bind(unit))
-	unit.unit_died.connect(_on_unit_died.bind(unit))
+	unit.reached_end.connect(_on_unit_reached_end)
+	unit.unit_died.connect(_on_unit_died)
 
 
-func _on_unit_reached_end(unit: Node2D) -> void:
+func _on_unit_reached_end(_unit: Node2D) -> void:
 	_trigger_win()
 
 
-func _on_unit_died(unit: Node2D) -> void:
-	if deployer.deployed_units.has(unit):
-		deployer.deployed_units.erase(unit)
+func _on_unit_died(_unit: Node2D) -> void:
+	# deployer already removes from its array
 	_check_lose_condition()
 
 
@@ -74,7 +104,13 @@ func _on_ai_action_complete() -> void:
 
 
 func _check_lose_condition() -> void:
-	if not deployer.is_deploying and deployer.deployed_units.is_empty():
+	# Lose when: no units left in queue AND no alive deployed units
+	var alive_count := 0
+	for unit in deployer.deployed_units:
+		if is_instance_valid(unit):
+			alive_count += 1
+	
+	if game_manager.units.unit_queue.is_empty() and alive_count == 0:
 		_trigger_lose()
 
 
@@ -83,14 +119,14 @@ func _trigger_win() -> void:
 	deployer.pause_deployment()
 	win_label.visible = true
 	win_label.text = "Victory! You breached the defenses!"
-	get_tree().paused = true
 	game_manager.level_won.emit()
+	get_tree().paused = true
 
 
 func _trigger_lose() -> void:
-	game_manager.phases.current_phase = PhaseManager.Phase.LEVEL_COMPLETE
+	game_manager.phases.complete_level()
 	deployer.pause_deployment()
 	lose_label.visible = true
 	lose_label.text = "Defeat! All units were destroyed."
-	get_tree().paused = true
 	game_manager.level_lost.emit()
+	get_tree().paused = true

@@ -6,9 +6,14 @@ var level_scene: PackedScene = preload("res://game/level/level.tscn")
 var current_level_select: Control = null
 var current_level: Level = null
 var return_timer: Timer
+var ui_layer: CanvasLayer
 
 
 func _ready() -> void:
+	ui_layer = CanvasLayer.new()
+	ui_layer.name = "UILayer"
+	add_child(ui_layer)
+	
 	return_timer = Timer.new()
 	return_timer.name = "ReturnTimer"
 	return_timer.one_shot = true
@@ -27,7 +32,7 @@ func _show_level_select() -> void:
 	
 	current_level_select = level_select_scene.instantiate()
 	current_level_select.level_selected.connect(_on_level_selected)
-	add_child(current_level_select)
+	ui_layer.add_child(current_level_select)
 
 
 func _on_level_selected(level_number: int) -> void:

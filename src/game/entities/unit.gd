@@ -68,6 +68,8 @@ func _physics_process(delta: float) -> void:
 			
 			if global_position.x > 1150:
 				reached_end.emit(self)
+				state = State.DEAD
+				is_alive = false
 		
 		State.ATTACKING:
 			velocity = Vector2.ZERO
