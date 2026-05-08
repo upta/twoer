@@ -65,6 +65,9 @@ func _ready() -> void:
 		range_area.body_exited.connect(_on_range_body_exited)
 
 func _process(delta: float) -> void:
+	if current_hp <= 0:
+		return
+	
 	fire_timer += delta
 	
 	if fire_timer >= fire_rate:
@@ -72,6 +75,8 @@ func _process(delta: float) -> void:
 		_fire_at_targets()
 
 func _fire_at_targets() -> void:
+	if current_hp <= 0:
+		return
 	if targets_in_range.is_empty():
 		return
 	
@@ -82,11 +87,26 @@ func _fire_at_targets() -> void:
 			if is_instance_valid(target) and target.has_method("take_damage"):
 				target.take_damage(int(damage_to_deal))
 				total_damage_dealt += int(damage_to_deal)
+				_show_attack_line(target)
 	else:
 		var target := targets_in_range[0]
 		if is_instance_valid(target) and target.has_method("take_damage"):
 			target.take_damage(int(damage_to_deal))
 			total_damage_dealt += int(damage_to_deal)
+			_show_attack_line(target)
+
+func _show_attack_line(target: Node2D) -> void:
+	var line := Line2D.new()
+	line.width = 2.0
+	line.default_color = TOWER_COLORS.get(tower_type, Color.RED)
+	line.default_color.a = 0.7
+	line.add_point(Vector2.ZERO)
+	line.add_point(target.global_position - global_position)
+	add_child(line)
+	
+	var tween := create_tween()
+	tween.tween_property(line, "modulate:a", 0.0, 0.15)
+	tween.tween_callback(line.queue_free)
 
 func _on_range_body_entered(body: Node2D) -> void:
 	if body.is_in_group("unit") or (body is CharacterBody2D and body.has_method("take_damage")):
