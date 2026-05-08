@@ -1,0 +1,69 @@
+{
+	"scenario_id": "win_screen",
+	"version": 3,
+	"description": "Verifies win screen visual correctness: after a unit reaches the end, the game phase transitions to LEVEL_COMPLETE, the ResultOverlay CanvasLayer (layer 10) becomes visible with correct victory text, and the tree pauses. Catches visual regression bugs like text behind UI or misaligned overlay.",
+	"harness_scene": "res://validation/harnesses/win_screen_harness.tscn",
+	"done_contract": {
+		"expected_phase": "LEVEL_COMPLETE",
+		"expected_overlay_visible": true,
+		"expected_overlay_layer": 10,
+		"expected_victory_text": "Victory! You breached the defenses!",
+		"expected_paused": true
+	},
+	"artifact_contract": {
+		"required_files": ["summary.json", "events.log"],
+		"missing_file_is_failure": true
+	},
+	"exit_codes": {
+		"pass": 0,
+		"assertion_failure": 1,
+		"runtime_error": 2,
+		"timeout": 3,
+		"artifact_generation_error": 4
+	},
+	"cli_contract": {
+		"command_template": "./tools/run_scenario.ps1 -Scenario src/validation/scenarios/win_screen.json -GodotExe <path>"
+	},
+	"steps": [
+		{ "op": "load_harness", "scene": "res://validation/harnesses/win_screen_harness.tscn" },
+		{ "op": "wait_frames", "frames": 210 },
+		{ "op": "checkpoint", "name": "after_win" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_win",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "LEVEL_COMPLETE"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_win",
+			"path": "harness_state.metrics.is_paused",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_win",
+			"path": "harness_state.metrics.result_overlay_visible",
+			"comparator": "eq",
+			"expected": true
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_win",
+			"path": "harness_state.metrics.result_overlay_layer",
+			"comparator": "gte",
+			"expected": 10
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_win",
+			"path": "harness_state.metrics.result_label_text",
+			"comparator": "eq",
+			"expected": "Victory! You breached the defenses!"
+		},
+		{ "op": "checkpoint", "name": "win_screen_visual" },
+		{ "op": "quit" }
+	]
+}
