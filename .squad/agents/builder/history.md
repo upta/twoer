@@ -2,6 +2,46 @@
 
 ## Learnings
 
+### Mana Actions Section — BATTLE_PLANNING UI Fix (2026-05-11)
+
+**Files Modified:**
+- `src/game/ui/planning_panel.gd` — Replaced `_revive_buttons` approach with `ManaActionsSection` container
+- `src/game/ui/planning_panel.tscn` — Added `ManaActionsSection` VBoxContainer node
+- `src/project.godot` — Added `revive_first_dead` and `heal_unit` input actions
+- `src/validation/scripts/harness_controllers/level_harness_controller.gd` — Expose `heal_button_visible`
+
+**Bug Fixed:**
+- BATTLE_PLANNING showed NO mana spending options. The old revive section only rendered when `dead_units` was non-empty, and Heal was only on the (permanently hidden) TacticalPanel. Players had mana with nothing to do.
+
+**Architecture:**
+- `ManaActionsSection` is a dedicated VBoxContainer that's visibility-toggled by `_update_mode()` (visible only during BATTLE_PLANNING)
+- Dynamic mana action nodes tracked in `_mana_action_nodes: Array[Control]` — rebuilt each update cycle
+- Heal button always present (disabled if no alive units or insufficient mana)
+- Revive buttons per dead unit type, with informative "No dead units" message when empty
+- `_unhandled_input` handles `revive_first_dead` / `heal_unit` actions for validation scenarios
+
+**Patterns:**
+- Mana actions now live in their own section (not jammed into QueueList). Prevents `_update_queue_display()` from accidentally queue_free'ing mana UI nodes.
+- Always show the section during BATTLE_PLANNING even when empty — player sees the mechanic exists.
+- Harness controller introspects `_mana_action_nodes` array and categorizes by button text prefix ("Heal" vs "Revive").
+
+### Phase Flow Bugfixes — Signal Ordering & UI Modes (2026-05-10)
+
+**Files Modified:**
+- `src/game/level/level.gd` — `call_deferred("begin_battle_planning")` in CHECKPOINT handler
+- `src/game/systems/unit_deployer.gd` — `start_deployment()` gracefully handles empty queue
+- `src/game/ui/planning_panel.gd` — Lane/reorder locked to BATTLE_PLANNING, Deploy button always enabled in mana mode
+
+**Bugs Fixed:**
+1. **Units never deploy after checkpoint** — Deploy button was disabled when queue was empty. In BATTLE_PLANNING, button must always be enabled (alive units keep fighting). Deployer also needs to gracefully no-op when queue is empty.
+2. **First BATTLE_PLANNING redundant** — Lane selection and queue reorder were available in INITIAL_PLANNING (duplicating BATTLE_PLANNING). Per design.md, these belong exclusively in BATTLE_PLANNING. Moved by hiding LaneSection and reorder buttons during INITIAL_PLANNING.
+3. **Planning UI invisible at checkpoint** — Signal ordering bug: `begin_battle_planning()` emitted BATTLE_PLANNING while CHECKPOINT handlers still pending. game_ui received BATTLE_PLANNING (visible=true) then remaining CHECKPOINT handler (visible=false). Fixed with `call_deferred`.
+
+**Patterns:**
+- **Signal ordering hazard:** Never emit a second signal from within a signal handler if other handlers haven't run yet. Use `call_deferred` for phase transitions triggered inside handlers.
+- **UI mode gating:** Use `_is_mana_mode` flag + parent node `.visible` toggling to restrict sections by phase. `get_parent().get_parent()` navigates Button→HBox→Section.
+- **Empty queue ≠ no battle:** Deployer and UI must handle empty queue gracefully during BATTLE_PLANNING — alive deployed units still fight.
+
 ### Squad Skills Symlinks (2026-05-10)
 
 **Pattern:** Symlink `.squad/skills/<name>` → `../../submodules/agentic_godot_validation/.github/skills/<name>` using relative paths.

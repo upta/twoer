@@ -43,3 +43,30 @@
 - The existing scenario pattern is straightforward: load_harness → wait_frames → checkpoint → assert_value chain. Reusable and clean.
 - Found and used `.squad/skills/author-validation-scenario/SKILL.md` — it was very helpful. It provided the complete v3 schema (done_contract, artifact_contract, exit_codes, cli_contract) which the existing `initial_state.json` (v1) was missing. Used it to write `unit_deployment.json` as a proper v3 scenario.
 - Confirmed `initial_state.json` still has a stale mana expectation of 50 (should be 0). The new `unit_deployment.json` uses the correct value.
+
+## Session: Battle Planning UI & Mana Resurrection Scenarios
+
+### What was done
+- Created 3 scenarios for BATTLE_PLANNING phase validation:
+  - `battle_planning_ui.json` — asserts planning panel visibility, shop hidden, lane buttons visible, deploy button enabled, revive section visible when dead units exist
+  - `mana_resurrection.json` — asserts revive mechanics: mana decreases by 30, dead unit moves to queue, cannot revive when no dead units remain
+  - `phase_transition_checkpoint.json` — asserts checkpoint→BATTLE_PLANNING transition: +15 mana, planning UI appears, checkpoint_index increments
+- Created new harness scene `level_battle_planning_with_dead_harness.tscn` (setup_mode: "battle_planning_with_dead")
+- Extended `level_harness_controller.gd`:
+  - Added `battle_planning_with_dead` setup mode (80 mana, 2 dead units, 1 unit in queue)
+  - Added `_setup_dead_units()` helper
+  - Added `_get_ui_state()` to expose UI visibility metrics
+  - New metrics exposed: `shop_section_visible`, `lane_section_visible`, `deploy_button_visible`, `deploy_button_disabled`, `revive_section_visible`, `revive_button_count`
+  - New node facts: `nodes.planning_panel` (with `visible` from HarnessStateHelpers)
+
+### Key learnings
+- The `mana_resurrection.json` scenario uses `press_action: "revive_first_dead"` — this input action must be mapped in the project input map by Builder, OR the harness controller needs to call `units.revive_unit()` directly. This is documented in done_contract.
+- PlanningPanel exposes `_revive_buttons` as an array — first item is a Label header, rest are Buttons. The harness filters by `btn is Button` to count actual revive buttons.
+- The UI node path is `level.get_node("UI/PlanningPanel")` — the UI is a CanvasLayer child of Level.
+- `phase_transition_checkpoint.json` reuses the existing `level_battle_harness.tscn` (battle mode, lane 2, Swarm unit) which takes ~450 frames for checkpoint reach.
+
+### Harness state dependencies for Builder
+- `revive_first_dead` input action needs mapping OR harness-level revive triggering
+- `planning_panel.visible` relies on `HarnessStateHelpers.build_node_facts()` returning visibility
+- All new metrics are self-contained in the harness controller — no game code changes needed beyond the input action
+
