@@ -123,14 +123,14 @@ func _update_queue_display() -> void:
 		
 		if show_reorder:
 			var up_button := Button.new()
-			up_button.text = "▲"
+			up_button.text = "^"
 			up_button.disabled = (i == 0)
 			up_button.custom_minimum_size = Vector2(30, 0)
 			up_button.pressed.connect(_on_queue_move.bind(i, i - 1))
 			row.add_child(up_button)
 			
 			var down_button := Button.new()
-			down_button.text = "▼"
+			down_button.text = "v"
 			down_button.disabled = (i == queue_size - 1)
 			down_button.custom_minimum_size = Vector2(30, 0)
 			down_button.pressed.connect(_on_queue_move.bind(i, i + 1))
