@@ -16,8 +16,8 @@
 
 ## How I Work
 - Write scenarios that verify observable player-facing behavior, not implementation details
-- Use the `author-validation-scenario` skill to create new scenarios
-- Use the `debug-validation-failure` skill to diagnose failures from `summary.json`, `event_log.json`, screenshots, and scene trees
+- Before creating or modifying scenarios, read `.squad/skills/author-validation-scenario/SKILL.md` for the full schema, step ops, and examples
+- Before diagnosing failures, read `.squad/skills/debug-validation-failure/SKILL.md` for artifact reading guides and common failure patterns
 - Run scenarios via `./tools/run_scenario.ps1 -Scenario <path> -GodotExe <path>`
 - Run full suites via `./tools/run_all_scenarios.ps1`
 - Keep harnesses deterministic: fixed seed, locked framerate, muted audio (handled by the runtime)

@@ -1,0 +1,76 @@
+{
+	"scenario_id": "unit_deployment",
+	"version": 3,
+	"description": "Verifies the initial game state is correct for unit deployment: INITIAL_PLANNING phase, 150 starting gold, 0 mana, empty unit queue, no units on the field.",
+	"harness_scene": "res://validation/harnesses/level_harness.tscn",
+	"done_contract": {
+		"expected_phase": "INITIAL_PLANNING",
+		"expected_starting_gold": 150,
+		"expected_starting_mana": 0,
+		"expected_queue_size": 0,
+		"expected_deployed_count": 0,
+		"expected_alive_deployed_count": 0
+	},
+	"artifact_contract": {
+		"required_files": ["summary.json", "events.log"],
+		"missing_file_is_failure": true
+	},
+	"exit_codes": {
+		"pass": 0,
+		"assertion_failure": 1,
+		"runtime_error": 2,
+		"timeout": 3,
+		"artifact_generation_error": 4
+	},
+	"cli_contract": {
+		"command_template": "./tools/run_scenario.ps1 -Scenario src/validation/scenarios/unit_deployment.json -GodotExe <path>"
+	},
+	"steps": [
+		{ "op": "load_harness", "scene": "res://validation/harnesses/level_harness.tscn" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "initial" },
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "INITIAL_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.gold",
+			"comparator": "eq",
+			"expected": 150
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.unit_queue_size",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.deployed_count",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.alive_deployed_count",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{ "op": "quit" }
+	]
+}
