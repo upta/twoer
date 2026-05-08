@@ -84,6 +84,7 @@ func _trigger_win() -> void:
 	win_label.visible = true
 	win_label.text = "Victory! You breached the defenses!"
 	get_tree().paused = true
+	game_manager.level_won.emit()
 
 
 func _trigger_lose() -> void:
@@ -92,3 +93,4 @@ func _trigger_lose() -> void:
 	lose_label.visible = true
 	lose_label.text = "Defeat! All units were destroyed."
 	get_tree().paused = true
+	game_manager.level_lost.emit()

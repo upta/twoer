@@ -12,6 +12,7 @@ func _ready() -> void:
 	return_timer = Timer.new()
 	return_timer.name = "ReturnTimer"
 	return_timer.one_shot = true
+	return_timer.process_mode = Node.PROCESS_MODE_ALWAYS
 	return_timer.timeout.connect(_on_return_timer_timeout)
 	add_child(return_timer)
 	

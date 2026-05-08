@@ -2,6 +2,29 @@
 
 ## Learnings
 
+### Phase 7: Level Select + Main Integration (2026-05-08)
+
+**Files Created:**
+- `src/game/ui/level_select.gd` + `level_select.tscn` — Full-screen level select menu with title and 3 level buttons
+
+**Files Modified:**
+- `src/game/main.gd` — Added orchestration between level select and gameplay
+- `src/game/level/level.gd` — Added signal emissions on win/lose
+
+**Key Patterns:**
+- Level select uses Control root with full-rect anchors and dark background
+- VBoxContainer with centered alignment for layout (title → subtitle → spacer → buttons)
+- Buttons sized at 300x60 minimum, large font (20pt) for readability
+- Signal chain: level_select.level_selected → main._on_level_selected → instantiate level
+- Win/lose flow: level emits game_manager.level_won/level_lost → main starts 2s timer → return to level select
+- Main unpause tree via `get_tree().paused = false` when showing level select
+
+**Decisions:**
+- Used dynamic scene instantiation in main.gd rather than switching scene tree
+- 2-second delay before returning to menu gives player time to read win/lose message
+- Level select scene preloaded for instant display on return
+- queue_free() used for cleanup rather than remove_child() to prevent memory leaks
+
 ### Phase 5 + 6: UI and Level Integration (2026-05-08)
 
 **Files Created:**
