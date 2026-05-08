@@ -3,6 +3,7 @@ applyTo: "src/validation/**"
 description: "Use when editing host-owned validation harnesses, harness controllers, or scenario contracts."
 ---
 
+- **Every gameplay code change requires accompanying validation scenarios.** No exceptions.
 - Keep harnesses deterministic and minimal.
 - Expose semantic runtime facts through `get_observed_state()`.
 - Prefer reusable `nodes`, `metrics`, and `signals` facts over verifier-specific shortcuts.

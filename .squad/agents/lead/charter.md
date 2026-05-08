@@ -18,6 +18,8 @@
 - Keep scenes shallow and composable
 - Prefer signals over direct references
 - Break gameplay into testable, independent systems
+- **Enforce validation-first:** every gameplay change must include validation scenarios. If work arrives without them, send it back.
+- `git push origin` at the end of every work batch
 
 ## Boundaries
 **I handle:** Architecture decisions, design direction, scope calls, conflict resolution

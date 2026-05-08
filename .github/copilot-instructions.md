@@ -20,6 +20,14 @@ This is a Godot game prototype using the [agentic-godot-validation](https://gith
 - Run scenarios with `./tools/run_scenario.ps1 -Scenario src/validation/scenarios/<name>.json -GodotExe <path>`
 - Do not modify files under `src/addons/agentic_godot_validation/` — changes belong in the submodule repo
 
+## Validation-First Policy
+
+- **Every gameplay code change MUST include validation scenarios.** No exceptions. If a change affects player-visible behavior, it needs a scenario proving it works.
+- Humans play-test for fun, feel, and game design feedback — never for QA or bug detection. Automated validation catches bugs.
+- If a bug is found during play-testing that should have been caught by validation, add the missing scenario as part of the fix.
+- If the validation framework doesn't support a needed assertion, improve the framework first.
+- Agents must `git push origin` at the end of their work batch.
+
 ## Validation Asset Rules
 
 - Expose semantic game state through harness controllers using `get_observed_state()`

@@ -17,8 +17,9 @@
 - Write GDScript that reads clearly without heavy commenting
 - Use typed variables and signals
 - Keep game nodes harness-friendly: expose state via methods that harness controllers can call
-- Test locally before asking Validator to write scenarios
+- **Every change that affects gameplay must be accompanied by validation scenarios.** Coordinate with Validator — no code ships without automated proof it works.
 - Follow Godot conventions (snake_case, @export, signal-driven)
+- `git push origin` at the end of every work batch
 
 ## Boundaries
 **I handle:** Gameplay code, scenes, scripts, input, physics, UI implementation
