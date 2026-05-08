@@ -2,7 +2,52 @@
 
 ## Learnings
 
-### Phase 8: Critical Bugfixes from Playtesting (2026-05-08)
+### Phase 10: Phase Flow Restructure (2026-05-08)
+
+**Correct Phase Flow (per Brian's design correction):**
+1. INITIAL_PLANNING — spend GOLD (buy units, upgrades, pick lane, reorder queue) → click "Ready"
+2. BATTLE_PLANNING — spend MANA (revive dead units, reorder queue, pick lane) → click "Deploy!"
+3. BATTLE — units auto-deploy from queue, fight defenses. NO UI panels, NO mana actions.
+4. CHECKPOINT — transient (instant): AI repairs/upgrades, +15 mana, immediately → BATTLE_PLANNING
+5. Repeat 2→3→4 until WIN or LOSE.
+
+**Key Design Corrections:**
+- Tactical panel (redirect/hold/heal) does NOT exist during battle — all mana decisions at checkpoints
+- Planning panel has two modes: gold mode (INITIAL) shows shop/upgrades; mana mode (BATTLE_PLANNING) shows revive + queue only
+- CHECKPOINT is invisible to player — AI acts synchronously, then player sees BATTLE_PLANNING
+- Dead units tracked in UnitRegistry.dead_units for revive candidates (30 mana, 50% HP)
+- Lose condition: queue empty AND no alive deployed units (during BATTLE phase)
+
+**Files Modified:**
+- `src/game/core/unit_registry.gd` — Added dead_units array, record_death(), revive_unit(), REVIVE_COST/REVIVE_HP_PERCENT
+- `src/game/systems/unit_deployer.gd` — _on_unit_died now calls registry.record_death()
+- `src/game/level/level.gd` — CHECKPOINT instant transition, removed ai_action_complete handler
+- `src/game/ui/game_ui.gd` — Tactical panel always hidden, phase-based planning visibility
+- `src/game/ui/planning_panel.gd` — Gold/mana mode split, revive UI section, shop hidden in mana mode
+
+**Patterns:**
+- Use `get_parent()` to toggle entire scene tree sections (ShopSection visibility)
+- Revive buttons generated dynamically from dead_units counts, refreshed on queue/mana changes
+- Phase-based UI mode tracked with `_is_mana_mode` flag updated on every phase change
+
+### Phase 9: Checkpoint Freeze & Queue Reorder Bugfixes (2026-05-08)
+
+**Files Modified:**
+- `src/game/level/level.gd` — Added battlefield.process_mode toggle in `_on_phase_changed()`
+- `src/game/core/unit_registry.gd` — Added `move_unit_in_queue(from, to)` method
+- `src/game/ui/planning_panel.gd` — Queue display now uses HBoxContainer with ▲/▼ buttons
+
+**Key Patterns:**
+- **Battlefield freeze via process_mode:** Setting `battlefield.process_mode = PROCESS_MODE_DISABLED` freezes ALL child nodes (units, towers) during non-BATTLE phases. UI stays responsive because it's in a separate CanvasLayer (not under Battlefield).
+- **Pattern: Use process_mode for bulk pause, not per-unit state checks.** Much simpler than iterating units.
+- Queue reorder uses remove_at + insert (not swap) to maintain relative order of other items.
+- Button callbacks use `.bind(i, i-1)` / `.bind(i, i+1)` for up/down — indices captured at creation time.
+
+**Decisions:**
+- Battlefield disabled during ALL non-BATTLE phases (INITIAL_PLANNING, CHECKPOINT, BATTLE_PLANNING, LEVEL_COMPLETE) — not just CHECKPOINT
+- Tactical panel visibility bug was a downstream symptom of Bug 1, not its own code issue
+
+### Phase 8:Critical Bugfixes from Playtesting (2026-05-08)
 
 **Files Modified:**
 - `src/game/level/level.gd` — Fixed signal argument mismatch, added checkpoint detection, fixed win/lose signal emission order
