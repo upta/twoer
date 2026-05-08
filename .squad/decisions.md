@@ -66,3 +66,73 @@ Team decisions log. Append-only.
 **Why:** User request — captured for team memory
 
 ---
+
+### 2026-05-08: Phase 2 — Collision Layer Architecture & Entity Design
+
+**By:** Builder (Implementation Engineer)
+
+**What:** Phase 2 delivered 6 entity scripts with collision layers, attack detection, and upgrade mechanics:
+- **Collision Layers:** Layer 1 (units) / Layer 2 (defenses) with proper masks for separation
+- **Unit Detection:** Area2D positioned ahead of unit for attack range discovery
+- **Tower Targeting:** FIFO array (first-in, first-out order for non-splash)
+- **Upgrade Calculation:** Dynamic damage/range boost computed at usage time
+- **Entity Lifecycle:** Signals (unit_died, tower_destroyed, wall_destroyed) with queue_free()
+- **Visual Placeholder:** ColorRect nodes with type-specific colors and sizes
+
+**Why:**
+- Layer separation prevents unwanted collisions while enabling physics-based interactions
+- Positioned Area2D is more performant than raycasting for attack range
+- FIFO targeting matches design spec and is simple to implement
+- Dynamic upgrades keep base stats immutable, simplifying state tracking
+- Signal-based lifecycle integrates cleanly with scene architecture
+
+**Status:** Complete. Entities ready for Battlefield integration (Phase 3).
+
+---
+
+### 2026-05-08: Phase 3-4 — Battlefield Structure & Game Systems
+
+**By:** Builder (Implementation Engineer)
+
+**What:** Phase 3-4 delivered battlefield orchestration and game systems:
+- **Lane Structure:** Dual containers (DefenseContainer, UnitContainer) for clean separation
+- **Checkpoint Tracking:** Lane stores positions, GameManager queries cross-lane for batch detection
+- **Unit Deployment:** Timer-based queue modification with pause/resume control (no reset on hold)
+- **AI Heuristic:** Greedy upgrade of tower with highest total_damage_dealt (deterministic, predictable)
+- **Win/Lose Conditions:** Win = any unit reaches 1150px, Lose = all units dead + deployment complete
+
+**Why:**
+- Dual containers prevent z-index conflicts and simplify querying
+- Checkpoint threshold at 1150px gives 50px buffer from edge
+- Deployer modifies registry queue to keep state accurate for UI
+- Greedy AI heuristic rewards towers doing actual damage, simple enough for prototype
+- Win/lose logic avoids false triggers during active battle
+
+**Status:** Complete. Systems integrated into Level scene (Phase 5-6).
+
+---
+
+### 2026-05-08: Phase 5-6 — UI & Level Integration
+
+**By:** Builder (Implementation Engineer)
+
+**What:** Phase 5-6 delivered complete UI and level integration:
+- **Phase-Based UI:** PlanningPanel (INITIAL_PLANNING/BATTLE_PLANNING), TacticalPanel (BATTLE)
+- **Hold Button:** Costs 15 mana on first press, free on release
+- **Win/Lose Detection:** Win = unit reaches end, Lose = all units dead + deployment complete
+- **Heal Targeting:** First alive deployed unit for 30 HP
+- **Revive Placeholder:** Disabled with "Coming soon" (requires death mechanics refactor)
+- **Level System:** 3 hardcoded levels with increasing difficulty
+- **Full Integration:** Level orchestrator wires GameManager, Battlefield, UI, and phase progression
+
+**Why:**
+- Phase-based visibility keeps UI automatically synchronized with game state
+- Hold button cost is tactical (commit mana to delay) vs operational (cost both ways)
+- Win/lose conditions avoid false positives during active battle
+- Heal targeting is simple and deterministic (can manipulate via deployment timing)
+- Revive disabled pending refactor of death mechanics (currently queue_free())
+- 3 levels provide playtest content with escalating challenge
+
+**Status:** Complete. Full game loop playable.
+
+---

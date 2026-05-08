@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://c8vwj7yh3kx2m"]
+
+[ext_resource type="Script" path="res://game/battlefield/battlefield.gd" id="1_battlefield_script"]
+[ext_resource type="PackedScene" uid="uid://bq2kjp8y8kxn5" path="res://game/battlefield/lane.tscn" id="2_lane_scene"]
+
+[node name="Battlefield" type="Node2D"]
+script = ExtResource("1_battlefield_script")
+
+[node name="Lane1" parent="." instance=ExtResource("2_lane_scene")]
+position = Vector2(0, 80)
+lane_index = 0
+
+[node name="Lane2" parent="." instance=ExtResource("2_lane_scene")]
+position = Vector2(0, 200)
+lane_index = 1
+
+[node name="Lane3" parent="." instance=ExtResource("2_lane_scene")]
+position = Vector2(0, 320)
+lane_index = 2
+
+[node name="Lane4" parent="." instance=ExtResource("2_lane_scene")]
+position = Vector2(0, 440)
+lane_index = 3

@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://c7y8n5m3p2qwd"]
+
+[ext_resource type="Script" path="res://game/ui/game_ui.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://bqwx5y8m7n3jd" path="res://game/ui/hud.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://cm3k8y7p2n4ld" path="res://game/ui/planning_panel.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://dw5p9z3m8q7kf" path="res://game/ui/tactical_panel.tscn" id="4"]
+
+[node name="GameUI" type="CanvasLayer"]
+script = ExtResource("1")
+
+[node name="HUD" parent="." instance=ExtResource("2")]
+
+[node name="PlanningPanel" parent="." instance=ExtResource("3")]
+
+[node name="TacticalPanel" parent="." instance=ExtResource("4")]
