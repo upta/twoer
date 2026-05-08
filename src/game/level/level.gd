@@ -35,15 +35,15 @@ func _physics_process(_delta: float) -> void:
 	if alive_units.is_empty():
 		return
 	
-	# Check if ALL alive units have passed the current checkpoint x-position
+	# Check if ANY alive unit has reached the current checkpoint x-position
 	var checkpoint_x: float = battlefield.get_lane(0).checkpoint_positions[_current_checkpoint_index]
-	var all_past: bool = true
+	var any_reached: bool = false
 	for unit in alive_units:
-		if unit.global_position.x < checkpoint_x:
-			all_past = false
+		if unit.global_position.x >= checkpoint_x:
+			any_reached = true
 			break
 	
-	if all_past:
+	if any_reached:
 		# Mark checkpoint visuals as reached on all lanes
 		for lane_idx in range(4):
 			var lane: Lane = battlefield.get_lane(lane_idx)
