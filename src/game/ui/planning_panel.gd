@@ -8,11 +8,15 @@ class_name PlanningPanel
 @onready var upgrade_tank_button: Button = $VBoxContainer/ShopSection/UpgradeTankButton
 @onready var upgrade_speeder_button: Button = $VBoxContainer/ShopSection/UpgradeSpeedButton
 @onready var queue_container: VBoxContainer = $VBoxContainer/QueueSection/QueueList
+@onready var mana_actions_container: VBoxContainer = $VBoxContainer/ManaActionsSection
 @onready var lane_1_button: Button = $VBoxContainer/LaneSection/LaneButtons/Lane1Button
 @onready var lane_2_button: Button = $VBoxContainer/LaneSection/LaneButtons/Lane2Button
 @onready var lane_3_button: Button = $VBoxContainer/LaneSection/LaneButtons/Lane3Button
 @onready var lane_4_button: Button = $VBoxContainer/LaneSection/LaneButtons/Lane4Button
 @onready var start_battle_button: Button = $VBoxContainer/StartBattleButton
+
+const HEAL_COST := 20
+const HEAL_AMOUNT := 30
 
 var economy: EconomyManager
 var units: UnitRegistry
@@ -20,7 +24,7 @@ var deployer: UnitDeployer
 var phases: PhaseManager
 
 var lane_buttons: Array[Button] = []
-var _revive_buttons: Array[Button] = []
+var _mana_action_nodes: Array[Control] = []
 var _is_mana_mode: bool = false
 
 
@@ -58,9 +62,9 @@ func _update_all() -> void:
 	_update_mode()
 	_update_buttons()
 	_update_queue_display()
+	_update_mana_actions()
 	_update_lane_selection()
 	_update_start_button()
-	_update_revive_section()
 
 
 func _update_mode() -> void:
@@ -70,6 +74,10 @@ func _update_mode() -> void:
 	var shop_section := buy_swarm_button.get_parent()
 	if shop_section:
 		shop_section.visible = not _is_mana_mode
+	
+	# Mana actions section only visible during BATTLE_PLANNING
+	if mana_actions_container:
+		mana_actions_container.visible = _is_mana_mode
 
 
 func _update_buttons() -> void:
@@ -131,37 +139,49 @@ func _update_queue_display() -> void:
 		queue_container.add_child(row)
 
 
-func _update_revive_section() -> void:
-	# Clear old revive buttons
-	for btn in _revive_buttons:
-		if is_instance_valid(btn):
-			btn.queue_free()
-	_revive_buttons.clear()
+func _update_mana_actions() -> void:
+	# Clear previous dynamic nodes
+	for node in _mana_action_nodes:
+		if is_instance_valid(node):
+			node.queue_free()
+	_mana_action_nodes.clear()
 	
 	if not _is_mana_mode:
 		return
 	
+	# Heal button — heal first alive deployed unit
+	var has_alive_units := false
+	for unit in deployer.deployed_units:
+		if is_instance_valid(unit) and unit.is_alive:
+			has_alive_units = true
+			break
+	
+	var heal_btn := Button.new()
+	heal_btn.text = "Heal Unit (%dm)" % HEAL_COST
+	heal_btn.disabled = not has_alive_units or economy.mana < HEAL_COST
+	heal_btn.pressed.connect(_on_heal_pressed)
+	mana_actions_container.add_child(heal_btn)
+	_mana_action_nodes.append(heal_btn)
+	
+	# Revive section
 	if units.dead_units.is_empty():
-		return
-	
-	# Add revive header
-	var header := Label.new()
-	header.text = "— Revive (%dm each) —" % UnitRegistry.REVIVE_COST
-	queue_container.add_child(header)
-	_revive_buttons.append(header)
-	
-	# Count dead units by type for display
-	var dead_counts: Dictionary = {}
-	for unit_type in units.dead_units:
-		dead_counts[unit_type] = dead_counts.get(unit_type, 0) + 1
-	
-	for unit_type in dead_counts:
-		var btn := Button.new()
-		btn.text = "Revive %s x%d (50%% HP)" % [unit_type, dead_counts[unit_type]]
-		btn.disabled = economy.mana < UnitRegistry.REVIVE_COST
-		btn.pressed.connect(_on_revive_unit.bind(unit_type))
-		queue_container.add_child(btn)
-		_revive_buttons.append(btn)
+		var no_dead_label := Label.new()
+		no_dead_label.text = "No dead units to resurrect"
+		no_dead_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		mana_actions_container.add_child(no_dead_label)
+		_mana_action_nodes.append(no_dead_label)
+	else:
+		var dead_counts: Dictionary = {}
+		for unit_type in units.dead_units:
+			dead_counts[unit_type] = dead_counts.get(unit_type, 0) + 1
+		
+		for unit_type in dead_counts:
+			var btn := Button.new()
+			btn.text = "Revive %s x%d (%dm, 50%% HP)" % [unit_type, dead_counts[unit_type], UnitRegistry.REVIVE_COST]
+			btn.disabled = economy.mana < UnitRegistry.REVIVE_COST
+			btn.pressed.connect(_on_revive_unit.bind(unit_type))
+			mana_actions_container.add_child(btn)
+			_mana_action_nodes.append(btn)
 
 
 func _update_lane_selection() -> void:
@@ -210,6 +230,17 @@ func _on_revive_unit(unit_type: String) -> void:
 	units.revive_unit(unit_type, economy)
 
 
+func _on_heal_pressed() -> void:
+	if economy.mana < HEAL_COST:
+		return
+	# Heal first alive deployed unit
+	for unit in deployer.deployed_units:
+		if is_instance_valid(unit) and unit.is_alive and unit.has_method("heal"):
+			if economy.spend_mana(HEAL_COST):
+				unit.heal(HEAL_AMOUNT)
+			break
+
+
 func _on_queue_move(from_index: int, to_index: int) -> void:
 	units.move_unit_in_queue(from_index, to_index)
 
@@ -217,13 +248,13 @@ func _on_queue_move(from_index: int, to_index: int) -> void:
 func _on_resources_changed(_amount: int) -> void:
 	_update_buttons()
 	_update_start_button()
-	_update_revive_section()
+	_update_mana_actions()
 
 
 func _on_queue_changed() -> void:
 	_update_queue_display()
 	_update_start_button()
-	_update_revive_section()
+	_update_mana_actions()
 
 
 func _on_upgrade_purchased(_type: String, _level: int) -> void:
@@ -232,3 +263,16 @@ func _on_upgrade_purchased(_type: String, _level: int) -> void:
 
 func _on_phase_changed(_phase: PhaseManager.Phase) -> void:
 	_update_all()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _is_mana_mode:
+		return
+	
+	if event.is_action_pressed("revive_first_dead"):
+		if not units.dead_units.is_empty():
+			_on_revive_unit(units.dead_units[0])
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("heal_unit"):
+		_on_heal_pressed()
+		get_viewport().set_input_as_handled()

@@ -68,6 +68,14 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="ManaActionsSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ManaActionsLabel" type="Label" parent="VBoxContainer/ManaActionsSection"]
+layout_mode = 2
+text = "Mana Actions"
+horizontal_alignment = 1
+
 [node name="LaneSection" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
