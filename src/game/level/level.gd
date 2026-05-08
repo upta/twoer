@@ -70,10 +70,13 @@ func setup(p_level_data: Dictionary) -> void:
 
 func _on_phase_changed(phase: PhaseManager.Phase) -> void:
 	if phase == PhaseManager.Phase.BATTLE:
+		battlefield.process_mode = Node.PROCESS_MODE_INHERIT
 		deployer.start_deployment()
-	elif phase == PhaseManager.Phase.CHECKPOINT:
-		deployer.pause_deployment()
-		ai_defender.execute_between_waves()
+	else:
+		battlefield.process_mode = Node.PROCESS_MODE_DISABLED
+		if phase == PhaseManager.Phase.CHECKPOINT:
+			deployer.pause_deployment()
+			ai_defender.execute_between_waves()
 
 
 func _on_unit_deployed(unit: Node2D, _lane_index: int) -> void:

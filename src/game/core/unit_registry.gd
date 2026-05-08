@@ -79,6 +79,20 @@ func reorder_queue(new_order: Array[String]) -> void:
 	queue_changed.emit()
 
 
+func move_unit_in_queue(from_index: int, to_index: int) -> void:
+	if from_index < 0 or from_index >= unit_queue.size():
+		return
+	if to_index < 0 or to_index >= unit_queue.size():
+		return
+	if from_index == to_index:
+		return
+	
+	var unit_type: String = unit_queue[from_index]
+	unit_queue.remove_at(from_index)
+	unit_queue.insert(to_index, unit_type)
+	queue_changed.emit()
+
+
 func remove_from_queue(index: int) -> void:
 	if index >= 0 and index < unit_queue.size():
 		unit_queue.remove_at(index)

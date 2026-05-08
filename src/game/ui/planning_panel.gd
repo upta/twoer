@@ -85,10 +85,30 @@ func _update_queue_display() -> void:
 	for child in queue_container.get_children():
 		child.queue_free()
 	
-	for i in units.unit_queue.size():
+	var queue_size: int = units.unit_queue.size()
+	for i in queue_size:
+		var row := HBoxContainer.new()
+		
 		var label := Label.new()
 		label.text = "%d. %s" % [i + 1, units.unit_queue[i]]
-		queue_container.add_child(label)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(label)
+		
+		var up_button := Button.new()
+		up_button.text = "▲"
+		up_button.disabled = (i == 0)
+		up_button.custom_minimum_size = Vector2(30, 0)
+		up_button.pressed.connect(_on_queue_move.bind(i, i - 1))
+		row.add_child(up_button)
+		
+		var down_button := Button.new()
+		down_button.text = "▼"
+		down_button.disabled = (i == queue_size - 1)
+		down_button.custom_minimum_size = Vector2(30, 0)
+		down_button.pressed.connect(_on_queue_move.bind(i, i + 1))
+		row.add_child(down_button)
+		
+		queue_container.add_child(row)
 
 
 func _update_lane_selection() -> void:
@@ -130,6 +150,10 @@ func _on_start_battle() -> void:
 		phases.begin_battle_planning()
 	elif phases.current_phase == PhaseManager.Phase.BATTLE_PLANNING:
 		phases.begin_battle()
+
+
+func _on_queue_move(from_index: int, to_index: int) -> void:
+	units.move_unit_in_queue(from_index, to_index)
 
 
 func _on_resources_changed(_amount: int) -> void:
