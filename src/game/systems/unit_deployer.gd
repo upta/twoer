@@ -93,7 +93,9 @@ func _on_unit_died(unit: Node2D) -> void:
 			_unit_registry.record_death(unit_type)
 
 func _on_unit_reached_end(unit: Node2D) -> void:
-	pass
+	var idx := deployed_units.find(unit)
+	if idx >= 0:
+		deployed_units.remove_at(idx)
 
 func get_state() -> Dictionary:
 	return {

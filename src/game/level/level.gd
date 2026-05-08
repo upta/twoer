@@ -26,10 +26,10 @@ func _physics_process(_delta: float) -> void:
 	if _current_checkpoint_index >= game_manager.phases.MAX_CHECKPOINTS:
 		return
 	
-	# Need at least one deployed unit alive to trigger checkpoint
+	# Only count units that are both valid and actually alive
 	var alive_units: Array[Node2D] = []
 	for unit in deployer.deployed_units:
-		if is_instance_valid(unit):
+		if is_instance_valid(unit) and unit.is_alive:
 			alive_units.append(unit)
 	
 	if alive_units.is_empty():
@@ -44,6 +44,11 @@ func _physics_process(_delta: float) -> void:
 			break
 	
 	if all_past:
+		# Mark checkpoint visuals as reached on all lanes
+		for lane_idx in range(4):
+			var lane: Lane = battlefield.get_lane(lane_idx)
+			if lane:
+				lane.mark_checkpoint_reached(_current_checkpoint_index)
 		_current_checkpoint_index += 1
 		game_manager.phases.reach_checkpoint()
 
@@ -104,7 +109,7 @@ func _check_lose_condition() -> void:
 	# Lose when: no units left in queue AND no alive deployed units
 	var alive_count := 0
 	for unit in deployer.deployed_units:
-		if is_instance_valid(unit):
+		if is_instance_valid(unit) and unit.is_alive:
 			alive_count += 1
 	
 	if game_manager.units.unit_queue.is_empty() and alive_count == 0:
