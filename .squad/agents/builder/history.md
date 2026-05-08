@@ -2,6 +2,43 @@
 
 ## Learnings
 
+### Squad Skills Symlinks (2026-05-10)
+
+**Pattern:** Symlink `.squad/skills/<name>` → `../../submodules/agentic_godot_validation/.github/skills/<name>` using relative paths.
+
+**Why:** Sub-agents spawned via `task` tool can't use the `skill` tool (platform limitation). By symlinking validation skill directories into `.squad/skills/`, sub-agents can read SKILL.md files directly via filesystem. The spawn template tells agents to check `.squad/skills/` for relevant skill docs before working.
+
+**Follows existing pattern:** Project already symlinks `.github/skills/` and `tools/` from the submodule using relative paths.
+
+### Checkpoint ANY-trigger Fix (2026-05-09)
+
+**Files Modified:**
+- `src/game/level/level.gd` — Changed checkpoint detection from ALL→ANY logic
+
+**Bug Fixed:**
+- Checkpoint required ALL alive units past the x-position. Units in harder lanes blocked the checkpoint for everyone. Changed to trigger when ANY alive unit reaches the checkpoint, matching design intent (fast scout triggers pause for replanning).
+
+**Pattern:**
+- ANY-trigger: flip from `all_past = true` / `< checkpoint_x` / `all_past = false` to `any_reached = false` / `>= checkpoint_x` / `any_reached = true`
+
+### Phase 11: Checkpoint Visuals & Detection Fixes (2026-05-09)
+
+**Files Modified:**
+- `src/game/battlefield/lane.gd` — Added checkpoint marker lines and labels
+- `src/game/level/level.gd` — Fixed alive_units filter, added checkpoint reached visuals
+- `src/game/systems/unit_deployer.gd` — Handle _on_unit_reached_end (remove from deployed_units)
+
+**Bugs Fixed:**
+1. **Checkpoint detection counted dead/ended units** — `is_instance_valid()` alone passes for units that reached the end (state=DEAD, is_alive=false but not queue_free'd). Fixed by adding `unit.is_alive` check.
+2. **Units that reached end stayed in deployed_units** — `_on_unit_reached_end` was `pass`. Now removes from array like `_on_unit_died` does.
+3. **Lose condition counted dead-but-valid units** — Same is_alive fix applied to `_check_lose_condition()`.
+
+**Patterns:**
+- Checkpoint markers created programmatically in `_ready()` via Line2D + Label nodes
+- `mark_checkpoint_reached()` method on Lane changes line/label color to green
+- Level.gd calls `mark_checkpoint_reached()` on all 4 lanes before incrementing checkpoint index
+- z_index = -1 keeps markers behind gameplay elements
+
 ### Phase 10: Phase Flow Restructure (2026-05-08)
 
 **Correct Phase Flow (per Brian's design correction):**
