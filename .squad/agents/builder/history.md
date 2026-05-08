@@ -2,6 +2,40 @@
 
 ## Learnings
 
+### Win/Lose Overlay Z-Order Fix (2026-05-13)
+
+**Files Modified:**
+- `src/game/level/level.tscn` — Replaced WinLabel + LoseLabel with ResultOverlay CanvasLayer (layer 10)
+- `src/game/level/level.gd` — Updated references to use single result_overlay + result_label
+
+**Bug Fixed:**
+- Win/lose labels rendered in world space (Node2D children) so they appeared BEHIND the UI CanvasLayer. Text wasn't truly screen-centered either.
+
+**Fix:**
+- CanvasLayer at layer 10 guarantees rendering above all other UI (game UI is default layer 1)
+- Full-rect anchored ColorRect (70% black) provides readable backdrop
+- Full-rect Label with centered alignment ensures proper centering regardless of viewport size
+- process_mode = PROCESS_MODE_ALWAYS keeps overlay visible when tree is paused
+- Consolidated two labels into one — text set dynamically in `_trigger_win`/`_trigger_lose`
+
+**Pattern:**
+- For "always on top" UI overlays in Godot: use a dedicated CanvasLayer with high layer number + PROCESS_MODE_ALWAYS. Never put screen-space UI as direct children of a Node2D scene root.
+
+### Dead Tower Bug + Attack Line Visuals (2026-05-12)
+
+**Files Modified:**
+- `src/game/entities/tower.gd` — Added hp guards and `_show_attack_line()` method
+
+**Bug Fixed:**
+- Dead towers could fire in the same frame after HP hits 0 but before `queue_free()` processes. Added `current_hp <= 0` guard in both `_process()` and `_fire_at_targets()`.
+
+**Feature Added:**
+- Visual attack indicators using Line2D children. On each fire, a line draws from tower to target using the tower's type color (semi-transparent). A tween fades it out over 0.15s then `queue_free`s the line node. AoE towers draw lines to ALL targets; single-target draws one.
+
+**Patterns:**
+- Tween-based ephemeral visuals: create child Line2D → tween modulate:a to 0 → callback queue_free. No timer nodes needed.
+- Double-guard idiom: check death state in both the caller (`_process`) and the callee (`_fire_at_targets`) to handle any future call paths.
+
 ### Mana Actions Section — BATTLE_PLANNING UI Fix (2026-05-11)
 
 **Files Modified:**

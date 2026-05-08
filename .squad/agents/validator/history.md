@@ -38,11 +38,38 @@
 - The `level_harness.tscn` with default `setup_mode = "initial"` is the right harness for verifying pre-game state; no need for a custom harness.
 - Added `alive_deployed_count` assertion (beyond `deployed_count`) to confirm no living units on the field — a stricter check.
 
+## Session: Win Screen Visual Regression Scenario
+
+### What was done
+- Created `win_screen_harness_controller.gd` — dedicated controller that starts a battle, teleports a unit to x=1145 after deployment, and exposes win overlay state (visibility, layer, text, pause status)
+- Created `win_screen_harness.tscn` — harness scene using the new controller with deploy_lane=2
+- Created `win_screen.json` — v3 scenario that asserts: LEVEL_COMPLETE phase, ResultOverlay visible, layer>=10, correct victory text, tree paused
+- Two checkpoints: `after_win` (for assertions) and `win_screen_visual` (screenshot artifact for human review)
+
+### Key learnings
+- The ResultOverlay CanvasLayer (layer=10) is Builder's fix — `level.gd` still references `$WinLabel` (legacy) but the .tscn now has the proper overlay structure
+- The harness exposes BOTH the legacy `win_label_visible`/`win_label_text` AND the new `result_overlay_*` metrics to support the transition period
+- `process_mode = ALWAYS` is required on the controller since `_trigger_win()` pauses the tree before our checkpoint runs
+
+### Dependencies on Builder
+- `level.gd._trigger_win()` must be updated to show ResultOverlay and set ResultLabel text (currently still uses legacy WinLabel)
+- Once Builder's fix lands, the scenario should pass; until then, `result_overlay_visible` will assert false (expected — this IS the regression test)
+
+### Files created
+- `src/validation/scripts/harness_controllers/win_screen_harness_controller.gd`
+- `src/validation/harnesses/win_screen_harness.tscn`
+- `src/validation/scenarios/win_screen.json`
+
 ## Learnings
 - No `.squad/skills/` files were present, so no skill discovery enrichment happened this session.
 - The existing scenario pattern is straightforward: load_harness → wait_frames → checkpoint → assert_value chain. Reusable and clean.
 - Found and used `.squad/skills/author-validation-scenario/SKILL.md` — it was very helpful. It provided the complete v3 schema (done_contract, artifact_contract, exit_codes, cli_contract) which the existing `initial_state.json` (v1) was missing. Used it to write `unit_deployment.json` as a proper v3 scenario.
 - Confirmed `initial_state.json` still has a stale mana expectation of 50 (should be 0). The new `unit_deployment.json` uses the correct value.
+- For win/lose screen validation, a dedicated harness controller is cleaner than overloading the generic level_harness_controller — the exposed state is fundamentally different (overlay visibility, layer depth, label text vs. economy/queue metrics).
+- Setting `process_mode = ALWAYS` on the harness controller is essential for post-win validation since `_trigger_win()` pauses the tree.
+- The `ResultOverlay` CanvasLayer (layer=10) in level.tscn is Builder's fix for the text-behind-UI bug. Validating `result_overlay_layer >= 10` catches regression if the layer is reduced.
+- Teleporting a unit to x=1145 (5px before the 1150 win threshold) provides deterministic win triggering within ~3 frames at speed=100, much faster than waiting for natural traversal (~660 frames).
+- Two checkpoints (one for assertions, one for visual reference) gives both automated verification and a screenshot artifact for human review.
 
 ## Session: Battle Planning UI & Mana Resurrection Scenarios
 
