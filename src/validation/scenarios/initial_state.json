@@ -1,0 +1,47 @@
+{
+	"scenario_id": "initial_state",
+	"version": 1,
+	"title": "Initial state verification",
+	"description": "Verifies the game starts with correct initial values for the Tutorial level: INITIAL_PLANNING phase, 150 gold, 50 mana, empty queue, no deployments.",
+	"harness_scene": "res://validation/harnesses/level_harness.tscn",
+	"steps": [
+		{ "op": "load_harness" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "initial" },
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "INITIAL_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.gold",
+			"comparator": "eq",
+			"expected": 150
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 50
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.unit_queue_size",
+			"comparator": "eq",
+			"expected": 0
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "initial",
+			"path": "harness_state.metrics.deployed_count",
+			"comparator": "eq",
+			"expected": 0
+		}
+	]
+}

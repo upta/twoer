@@ -1,0 +1,33 @@
+{
+	"scenario_id": "buy_units",
+	"version": 1,
+	"title": "Economy — buying Swarm units",
+	"description": "Verifies that buying a Swarm unit deducts the correct gold amount (10) and adds the correct number of units to the queue (3, per Swarm deploy_count). Tutorial level starts with 150 gold.",
+	"harness_scene": "res://validation/harnesses/level_with_units_harness.tscn",
+	"steps": [
+		{ "op": "load_harness" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "after_buy" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_buy",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "INITIAL_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_buy",
+			"path": "harness_state.metrics.gold",
+			"comparator": "eq",
+			"expected": 140
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_buy",
+			"path": "harness_state.metrics.unit_queue_size",
+			"comparator": "eq",
+			"expected": 3
+		}
+	]
+}

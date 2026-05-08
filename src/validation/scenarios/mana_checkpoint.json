@@ -1,0 +1,28 @@
+{
+	"scenario_id": "mana_checkpoint",
+	"version": 1,
+	"title": "Mana awarded at checkpoint",
+	"description": "Verifies that reaching a checkpoint awards +15 mana. Starting mana is 50 (set during level.setup). After a checkpoint triggers, mana should increase to 65. Uses the same battle harness as checkpoint_detection.",
+	"harness_scene": "res://validation/harnesses/level_battle_harness.tscn",
+	"steps": [
+		{ "op": "load_harness" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "before_checkpoint" },
+		{
+			"op": "assert_value",
+			"checkpoint": "before_checkpoint",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 50
+		},
+		{ "op": "wait_frames", "frames": 450 },
+		{ "op": "checkpoint", "name": "after_checkpoint" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_checkpoint",
+			"path": "harness_state.metrics.mana",
+			"comparator": "eq",
+			"expected": 65
+		}
+	]
+}

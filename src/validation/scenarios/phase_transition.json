@@ -1,0 +1,26 @@
+{
+	"scenario_id": "phase_transition",
+	"version": 1,
+	"title": "Phase transition — Initial Planning to Battle Planning",
+	"description": "Verifies that the phase correctly transitions from INITIAL_PLANNING to BATTLE_PLANNING after buying units and advancing. Uses a harness that pre-configures units and advances the phase.",
+	"harness_scene": "res://validation/harnesses/level_battle_planning_harness.tscn",
+	"steps": [
+		{ "op": "load_harness" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "after_transition" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_transition",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "BATTLE_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_transition",
+			"path": "harness_state.metrics.unit_queue_size",
+			"comparator": "gt",
+			"expected": 0
+		}
+	]
+}

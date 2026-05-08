@@ -1,0 +1,42 @@
+{
+	"scenario_id": "checkpoint_detection",
+	"version": 1,
+	"title": "Checkpoint triggers when ANY unit reaches checkpoint position",
+	"description": "Validates the critical ANY-unit checkpoint behavior. Deploys 3 Swarm units (speed 100) to an empty lane. When the first Swarm reaches the checkpoint at x=400, the game should transition through CHECKPOINT to BATTLE_PLANNING — even though slower units have not yet reached that position. This scenario catches the ALL-vs-ANY checkpoint detection bug.",
+	"harness_scene": "res://validation/harnesses/level_battle_harness.tscn",
+	"steps": [
+		{ "op": "load_harness" },
+		{ "op": "wait_frames", "frames": 5 },
+		{ "op": "checkpoint", "name": "battle_start" },
+		{
+			"op": "assert_value",
+			"checkpoint": "battle_start",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "BATTLE"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "battle_start",
+			"path": "harness_state.metrics.is_deploying",
+			"comparator": "eq",
+			"expected": true
+		},
+		{ "op": "wait_frames", "frames": 450 },
+		{ "op": "checkpoint", "name": "after_first_checkpoint" },
+		{
+			"op": "assert_value",
+			"checkpoint": "after_first_checkpoint",
+			"path": "harness_state.metrics.phase",
+			"comparator": "eq",
+			"expected": "BATTLE_PLANNING"
+		},
+		{
+			"op": "assert_value",
+			"checkpoint": "after_first_checkpoint",
+			"path": "harness_state.metrics.checkpoint_index",
+			"comparator": "gte",
+			"expected": 1
+		}
+	]
+}
