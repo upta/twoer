@@ -64,8 +64,14 @@ layout_mode = 2
 text = "Unit Queue"
 horizontal_alignment = 1
 
-[node name="QueueList" type="VBoxContainer" parent="VBoxContainer/QueueSection"]
+[node name="QueueScroll" type="ScrollContainer" parent="VBoxContainer/QueueSection"]
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="QueueList" type="VBoxContainer" parent="VBoxContainer/QueueSection/QueueScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="ManaActionsSection" type="VBoxContainer" parent="VBoxContainer"]
