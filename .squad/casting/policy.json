@@ -1,0 +1,4 @@
+{
+  "universes": ["*"],
+  "max_per_universe": 12
+}

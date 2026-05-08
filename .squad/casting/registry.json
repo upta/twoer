@@ -1,0 +1,25 @@
+{
+  "agents": {
+    "lead": {
+      "persistent_name": "Lead",
+      "universe": null,
+      "created_at": "2026-05-08T06:34:00Z",
+      "legacy_named": true,
+      "status": "active"
+    },
+    "builder": {
+      "persistent_name": "Builder",
+      "universe": null,
+      "created_at": "2026-05-08T06:34:00Z",
+      "legacy_named": true,
+      "status": "active"
+    },
+    "validator": {
+      "persistent_name": "Validator",
+      "universe": null,
+      "created_at": "2026-05-08T06:34:00Z",
+      "legacy_named": true,
+      "status": "active"
+    }
+  }
+}
