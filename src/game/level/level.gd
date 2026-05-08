@@ -6,8 +6,8 @@ class_name Level
 @onready var deployer: UnitDeployer = $UnitDeployer
 @onready var ai_defender: AIDefender = $AIDefender
 @onready var ui: CanvasLayer = $UI
-@onready var win_label: Label = $WinLabel
-@onready var lose_label: Label = $LoseLabel
+@onready var result_overlay: CanvasLayer = $ResultOverlay
+@onready var result_label: Label = $ResultOverlay/ResultLabel
 
 var level_data: Dictionary
 var checkpoint_x_positions: Array[int] = [400, 800]
@@ -15,8 +15,7 @@ var _current_checkpoint_index: int = 0
 
 
 func _ready() -> void:
-	win_label.visible = false
-	lose_label.visible = false
+	result_overlay.visible = false
 
 
 func _physics_process(_delta: float) -> void:
@@ -120,8 +119,8 @@ func _check_lose_condition() -> void:
 func _trigger_win() -> void:
 	game_manager.phases.complete_level()
 	deployer.pause_deployment()
-	win_label.visible = true
-	win_label.text = "Victory! You breached the defenses!"
+	result_overlay.visible = true
+	result_label.text = "Victory! You breached the defenses!"
 	game_manager.level_won.emit()
 	get_tree().paused = true
 
@@ -129,7 +128,7 @@ func _trigger_win() -> void:
 func _trigger_lose() -> void:
 	game_manager.phases.complete_level()
 	deployer.pause_deployment()
-	lose_label.visible = true
-	lose_label.text = "Defeat! All units were destroyed."
+	result_overlay.visible = true
+	result_label.text = "Defeat! All units were destroyed."
 	game_manager.level_lost.emit()
 	get_tree().paused = true
