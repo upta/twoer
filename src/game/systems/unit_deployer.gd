@@ -87,6 +87,10 @@ func _on_unit_died(unit: Node2D) -> void:
 	var idx := deployed_units.find(unit)
 	if idx >= 0:
 		deployed_units.remove_at(idx)
+	if unit.has_method("get_state"):
+		var unit_type: String = unit.get_state().get("unit_type", "")
+		if unit_type != "" and _unit_registry:
+			_unit_registry.record_death(unit_type)
 
 func _on_unit_reached_end(unit: Node2D) -> void:
 	pass

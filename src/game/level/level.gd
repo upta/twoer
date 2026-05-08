@@ -63,7 +63,6 @@ func setup(p_level_data: Dictionary) -> void:
 	game_manager.phases.phase_changed.connect(_on_phase_changed)
 	deployer.unit_deployed.connect(_on_unit_deployed)
 	deployer.deployment_complete.connect(_on_deployment_complete)
-	ai_defender.ai_action_complete.connect(_on_ai_action_complete)
 	
 	game_manager.phases.start_level()
 
@@ -72,11 +71,15 @@ func _on_phase_changed(phase: PhaseManager.Phase) -> void:
 	if phase == PhaseManager.Phase.BATTLE:
 		battlefield.process_mode = Node.PROCESS_MODE_INHERIT
 		deployer.start_deployment()
+	elif phase == PhaseManager.Phase.CHECKPOINT:
+		battlefield.process_mode = Node.PROCESS_MODE_DISABLED
+		deployer.pause_deployment()
+		# CHECKPOINT is transient: AI acts, +15 mana, then immediately to BATTLE_PLANNING
+		ai_defender.execute_between_waves()
+		game_manager.economy.add_mana(15)
+		game_manager.phases.begin_battle_planning()
 	else:
 		battlefield.process_mode = Node.PROCESS_MODE_DISABLED
-		if phase == PhaseManager.Phase.CHECKPOINT:
-			deployer.pause_deployment()
-			ai_defender.execute_between_waves()
 
 
 func _on_unit_deployed(unit: Node2D, _lane_index: int) -> void:
@@ -95,15 +98,6 @@ func _on_unit_died(_unit: Node2D) -> void:
 
 func _on_deployment_complete() -> void:
 	_check_lose_condition()
-
-
-func _on_ai_action_complete() -> void:
-	game_manager.economy.add_mana(15)
-	
-	if game_manager.phases.current_checkpoint < game_manager.phases.MAX_CHECKPOINTS:
-		game_manager.phases.begin_battle_planning()
-	else:
-		_check_lose_condition()
 
 
 func _check_lose_condition() -> void:

@@ -19,11 +19,15 @@ const UPGRADE_COSTS := {
 const UPGRADE_MULTIPLIERS := [1.0, 1.3, 1.6]
 
 var unit_queue: Array[String] = []
+var dead_units: Array[String] = []
 var upgrades: Dictionary = {
 	"Tank": 0,
 	"Swarm": 0,
 	"Speeder": 0
 }
+
+const REVIVE_COST := 30
+const REVIVE_HP_PERCENT := 0.5
 
 
 func buy_unit(unit_type: String, economy: Node) -> bool:
@@ -99,8 +103,26 @@ func remove_from_queue(index: int) -> void:
 		queue_changed.emit()
 
 
+func record_death(unit_type: String) -> void:
+	dead_units.append(unit_type)
+	queue_changed.emit()
+
+
+func revive_unit(unit_type: String, economy: Node) -> bool:
+	var idx := dead_units.find(unit_type)
+	if idx < 0:
+		return false
+	if not economy.spend_mana(REVIVE_COST):
+		return false
+	dead_units.remove_at(idx)
+	unit_queue.append(unit_type)
+	queue_changed.emit()
+	return true
+
+
 func reset() -> void:
 	unit_queue.clear()
+	dead_units.clear()
 	upgrades = {
 		"Tank": 0,
 		"Swarm": 0,
