@@ -2,6 +2,25 @@
 
 ## Learnings
 
+### itch.io Deploy Workflow Setup (2026-05-15)
+
+**Files Created:**
+- `.github/workflows/deploy.yml` — GitHub Actions workflow for web export + itch.io deploy
+- `src/export_presets.cfg` — Godot 4.6 web export preset
+
+**Files Modified:**
+- `.gitignore` — Removed `export_presets.cfg` from ignore (needed for CI builds)
+
+**Key Details:**
+- Uses `barichello/godot-ci:{version}` Docker image for headless Godot exports
+- Workflow triggers on push to main + manual dispatch
+- Requires two repo secrets: `ITCHIO_API_KEY` (butler auth) and `GODOT_SUBMODULE_PAT` (private submodule access)
+- Export preset name "Web" must match exactly what the workflow passes to `--export-release`
+- The `.stable` suffix on template path is hardcoded in the Docker image layout
+
+**Pattern:**
+- For Godot CI exports: `export_presets.cfg` must be tracked in git (unlike local dev where it's often gitignored). Remove from `.gitignore` when adding CI.
+
 ### Win/Lose Overlay Z-Order Fix (2026-05-13)
 
 **Files Modified:**
