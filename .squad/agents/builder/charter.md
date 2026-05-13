@@ -17,9 +17,13 @@
 - Write GDScript that reads clearly without heavy commenting
 - Use typed variables and signals
 - Keep game nodes harness-friendly: expose state via methods that harness controllers can call
-- **Every change that affects gameplay must be accompanied by validation scenarios.** Coordinate with Validator — no code ships without automated proof it works.
 - Follow Godot conventions (snake_case, @export, signal-driven)
-- `git push origin` at the end of every work batch
+
+## Definition of Done
+- **Every change that affects gameplay must be accompanied by validation scenarios.** Coordinate with Validator — no code ships without automated proof it works.
+- **Scenarios must pass.** Run new scenarios and confirm green. Run the full suite (`run_all_scenarios.ps1`) and confirm no regressions. If something broke, fix it before calling the work done.
+- A human should be play-testing the game idea, not discovering bugs. If a player could hit a broken behavior that validation could have caught, the work is not done.
+- `git push origin` at the end of every work batch.
 
 ## Boundaries
 **I handle:** Gameplay code, scenes, scripts, input, physics, UI implementation

@@ -26,7 +26,17 @@ This is a Godot game prototype using the [agentic-godot-validation](https://gith
 - Humans play-test for fun, feel, and game design feedback — never for QA or bug detection. Automated validation catches bugs.
 - If a bug is found during play-testing that should have been caught by validation, add the missing scenario as part of the fix.
 - If the validation framework doesn't support a needed assertion, improve the framework first.
-- Agents must `git push origin` at the end of their work batch.
+
+## Definition of Done
+
+A feature is not done until a human can play-test it for game feel — not for whether it works. "It works" is the agent's job to prove before any human touches the game. Specifically:
+
+1. **Validation scenarios exist** for the change — covering the intended behavior, not just the happy path.
+2. **New scenarios pass.** Writing a scenario is not enough. Run it and confirm green.
+3. **All existing scenarios still pass.** Run the full suite (`run_all_scenarios.ps1`) and confirm no regressions. If something broke, fix it before calling the work done.
+4. **`git push origin`** at the end of every work batch.
+
+If any of these are missing, the feature is not done. A human should never encounter a bug that automated validation could have caught.
 
 ## Validation Asset Rules
 
